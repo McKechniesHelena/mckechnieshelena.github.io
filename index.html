@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Steven's Ag Tools</title>
+<meta name="description" content="A hub of field-ready agricultural tools: tank-mix order, batch math, chemical lookup, weather, soil nitrogen, and more.">
+<meta name="theme-color" content="#1f4e2b">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="manifest" href="manifest.json">
+<!-- iOS "Add to Home Screen" -->
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Ag Tools">
+<style>
+  :root {
+    --green: #2e6f3e;
+    --green-dk: #1f4e2b;
+    --green-lt: #e7f1e9;
+    --ink: #1c2620;
+    --muted: #5b6b60;
+    --line: #d7e0d9;
+    --bg: #f6f8f6;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    line-height: 1.45;
+    -webkit-text-size-adjust: 100%;
+  }
+  header {
+    background: var(--green-dk);
+    color: #fff;
+    /* extra top/side padding accounts for notches & status bar in standalone app mode */
+    padding: calc(26px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) 26px calc(20px + env(safe-area-inset-left));
+  }
+  .title-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+  .title-icon {
+    flex-shrink: 0;
+    font-size: 2rem;
+    background: #fff;
+    border-radius: 12px;
+    width: 52px;
+    height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  header h1 { margin: 0 0 4px; font-size: 1.6rem; }
+  header .sub { margin: 0; font-size: .92rem; color: #cfe3d3; max-width: 70ch; }
+
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 26px calc(16px + env(safe-area-inset-right)) calc(48px + env(safe-area-inset-bottom)) calc(16px + env(safe-area-inset-left));
+  }
+  .section-label {
+    font-size: .8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    color: var(--green);
+    margin: 26px 0 12px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 14px;
+  }
+  .tile {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 18px;
+    text-decoration: none;
+    color: inherit;
+    transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .tile:hover, .tile:focus-visible {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(31, 78, 43, .14);
+    border-color: var(--green);
+    outline: none;
+  }
+  .tile .emoji {
+    font-size: 1.8rem;
+    line-height: 1;
+    background: var(--green-lt);
+    width: 46px;
+    height: 46px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tile h2 {
+    margin: 0;
+    font-size: 1.06rem;
+    color: var(--green-dk);
+  }
+  .tile p {
+    margin: 0;
+    font-size: .88rem;
+    color: var(--muted);
+    flex-grow: 1;
+  }
+  .tile { position: relative; }
+  .tile.locked::after {
+    content: "🔒";
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-size: .95rem;
+    opacity: .75;
+  }
+  .lock-note {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 16px 16px 0;
+    font-size: .82rem;
+    color: var(--muted);
+  }
+  .tile .go {
+    font-size: .82rem;
+    font-weight: 700;
+    color: var(--green);
+  }
+
+  footer {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 16px 40px;
+    font-size: .82rem;
+    color: var(--muted);
+  }
+  footer a { color: var(--green); }
+
+  /* Phones: tighten spacing, drop the icon-lift hover (no hover on touch), full-width tiles */
+  @media (max-width: 560px) {
+    header { padding-top: calc(20px + env(safe-area-inset-top)); padding-bottom: 20px; }
+    header h1 { font-size: 1.4rem; }
+    .title-icon { width: 46px; height: 46px; }
+    .title-icon svg { width: 34px; height: 34px; }
+    main { padding-top: 20px; }
+    .grid { grid-template-columns: 1fr; gap: 12px; }
+    .section-label { margin: 20px 0 10px; }
+    .tile { padding: 16px; }
+  }
+  @media (hover: none) {
+    .tile:hover { transform: none; box-shadow: none; border-color: var(--line); }
+  }
+  .tile:active { transform: scale(.985); }
+</style>
+</head>
+<body>
+<header>
+  <div class="title-row">
+    <div class="title-icon">
+      <svg viewBox="0 0 64 64" width="40" height="40" aria-hidden="true">
+        <path fill="#ef9f0a" d="M46.37 24.03 L46.37 27.97 L39.93 27.09 L39.41 29.02 L43.80 30.82 L42.07 33.81 L38.32 30.90 L36.90 32.32 L39.03 35.06 L36.33 36.62 L35.02 33.41 L33.09 33.93 L33.49 36.90 L30.51 36.90 L30.91 33.93 L28.98 33.41 L27.67 36.62 L24.97 35.06 L27.10 32.32 L25.68 30.90 L21.93 33.81 L20.20 30.82 L24.59 29.02 L24.07 27.09 L17.63 27.97 L17.63 24.03 L24.07 24.91 L24.59 22.98 L16.95 19.86 L19.16 16.04 L25.68 21.10 L27.10 19.68 L21.26 12.15 L25.38 9.77 L28.98 18.59 L30.91 18.07 L29.56 8.17 L34.44 8.17 L33.09 18.07 L35.02 18.59 L38.62 9.77 L42.74 12.15 L36.90 19.68 L38.32 21.10 L44.84 16.04 L47.05 19.86 L39.41 22.98 L39.93 24.91 Z"/>
+        <circle cx="32" cy="26" r="3.1" fill="#fff"/>
+        <g stroke="#2e6f3e" stroke-width="3.4" stroke-linecap="round" fill="none">
+          <path d="M9 44 q23 -7 46 0"/>
+          <path d="M9 52 q23 -7 46 0"/>
+          <path d="M13 59 q19 -6 38 0"/>
+        </g>
+      </svg>
+    </div>
+    <div>
+      <h1>Steven's Ag Tools</h1>
+      <p class="sub">Field-ready calculators and weather helpers for spraying, soil nitrogen, and crop staging.</p>
+    </div>
+  </div>
+</header>
+
+<p class="lock-note">🔒 = team password required</p>
+
+<main>
+  <div class="section-label">Spraying &amp; tank-mix</div>
+  <div class="grid">
+    <a class="tile locked" href="/mixing-order-sxe9/">
+      <div class="emoji"><img src="tank-mix-icon.svg" alt="" width="34" height="34"></div>
+      <h2>Tank-Mix Order</h2>
+      <p>Determine the correct order to add products to the tank.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/chem-lookup-g97n/">
+      <div class="emoji">🔍</div>
+      <h2>Chemical Lookup</h2>
+      <p>Look up chemicals and their rates.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/liberty-spray-a8ef/">
+      <div class="emoji">💨</div>
+      <h2>Liberty Spray Helper</h2>
+      <p>Find the best day to apply Liberty herbicide this week.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/dicamba-forecast-cbzu/">
+      <div class="emoji">🌦️</div>
+      <h2>Dicamba Forecast</h2>
+      <p>Forecast conditions for dicamba application over soybeans.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/herbicide-program-builder/">
+      <div class="emoji">🌿</div>
+      <h2>Herbicide Program Builder</h2>
+      <p>Build a burndown, PRE and POST program and see weed-by-weed control, gaps and sites of action from university ratings.</p>
+      <span class="go">Open →</span>
+    </a>
+  </div>
+
+  <div class="section-label">Soil &amp; nutrients</div>
+  <div class="grid">
+    <a class="tile locked" href="/psnt-calculator-mx6a/">
+      <div class="emoji">🌱</div>
+      <h2>PSNT Calculator</h2>
+      <p>Interpret Pre-Sidedress Nitrate tests and decide next steps.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/slow-release-n-3c5k/">
+      <div class="emoji">⏳</div>
+      <h2>Slow Release N</h2>
+      <p>Slow-release nitrogen calculator.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/2026_Tissue_Tests/">
+      <div class="emoji">🧪</div>
+      <h2>Tissue Testing Dashboard</h2>
+      <p>2026 season tissue test results and target ranges.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile" href="/uan-swap-calculator/">
+      <div class="emoji">🛢️</div>
+      <h2>UAN Swap Calculator</h2>
+      <p>Swap gallons between 28% and 32% UAN at equal pounds of nitrogen.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/Blend_Calc/">
+      <div class="emoji">⚖️</div>
+      <h2>Blend vs. Removal</h2>
+      <p>Compare a fertilizer blend to corn, silage or soybean removal, with P &amp; K soil-test change per year.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/soil-test-cheat-sheet/">
+      <div class="emoji">📊</div>
+      <h2>Soil Test Cheat Sheet</h2>
+      <p>Desired ranges for every line on a soil report, and how far your numbers sit from them.</p>
+      <span class="go">Open →</span>
+    </a>
+  </div>
+
+  <div class="section-label">Weather &amp; crop staging</div>
+  <div class="grid">
+    <a class="tile locked" href="/corn-gdu-daih/">
+      <div class="emoji">🌽</div>
+      <h2>Corn GDU Tool</h2>
+      <p>Growing-degree-unit emergence tool for corn.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/historic-weather-nb4x/">
+      <div class="emoji"><img src="weather-pest-icon.svg" alt="" width="34" height="34"></div>
+      <h2>Historic Weather &amp; Pest Modeling</h2>
+      <p>Look up historic weather data and model pest development.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/southern-rust-spore-tracker/">
+      <div class="emoji">🌪️</div>
+      <h2>Rust Spore Tracker</h2>
+      <p>Tap a spot for the 14-day forecast dispersal path of southern corn rust spores.</p>
+      <span class="go">Open →</span>
+    </a>
+    <a class="tile locked" href="/pollination-risk-tool/">
+      <div class="emoji">🌡️</div>
+      <h2>Pollination Heat Risk</h2>
+      <p>Pick a spot to see which planting dates and relative maturities silked into damaging heat.</p>
+      <span class="go">Open →</span>
+    </a>
+  </div>
+
+  <div class="section-label">Harvest</div>
+  <div class="grid">
+    <a class="tile" href="/grain-cart-yield-check/">
+      <div class="emoji">⚖️</div>
+      <h2>Grain Cart Yield Check</h2>
+      <p>Turn a grain cart weight, moisture, and pass size into bushels per acre at standard moisture.</p>
+      <span class="go">Open →</span>
+    </a>
+  </div>
+
+  <div class="section-label">Mapping &amp; scouting</div>
+  <div class="grid">
+    <a class="tile locked" href="/snapmap-48zk/">
+      <div class="emoji">📍</div>
+      <h2>SnapMap</h2>
+      <p>Plot geotagged photos on satellite imagery — drag in pics to see where they were taken.</p>
+      <span class="go">Open →</span>
+    </a>
+  </div>
+</main>
+
+<footer>
+  Built by Steven McKechnie · <a href="https://github.com/McKechniesHelena">github.com/McKechniesHelena</a>
+</footer>
+</body>
+</html>
